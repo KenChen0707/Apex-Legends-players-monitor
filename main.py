@@ -1,0 +1,75 @@
+import os
+import time
+
+import requests
+from dotenv import load_dotenv
+
+load_dotenv()
+
+YOUR_API_KEY = os.getenv("YOUR_API_KEY")
+DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+CHECK_INTERVAL = int(os.getenv("CHECK_INTERVAL"))
+PLAYER_UIDS = os.getenv("PLAYER_UID").split(",")
+FIELDS_TO_MONITOR = ["isOnline", "isInGame"]
+
+last_values = {
+    player_uid: {field_to_monitor: None for field_to_monitor in FIELDS_TO_MONITOR}
+    for player_uid in PLAYER_UIDS
+}
+
+
+def check_api(player_uid):
+    global last_values
+
+    try:
+        api_url = f"https://api.mozambiquehe.re/bridge?auth={YOUR_API_KEY}&uid={player_uid}&platform=PC"
+        response = requests.get(api_url)
+        data = response.json()
+
+        for field_to_monitor in FIELDS_TO_MONITOR:
+            current_value = data["realtime"][field_to_monitor]
+            last_value = last_values[player_uid][field_to_monitor]
+
+            if current_value != last_value:
+                if last_value is not None:  # 避免第一次運行時觸發
+                    content = None
+                    player_name = data["global"]["name"]
+
+                    if field_to_monitor == "isOnline":
+                        content = f"{"🥳" if current_value else "😴"} {player_name} 已{"上線" if current_value else "離線"}"
+                    if field_to_monitor == "isInGame" and current_value:
+                        content = f"🎮 {player_name} 遊戲中"
+
+                    if content:
+                        send_discord_notification(content)
+
+                last_values[player_uid][field_to_monitor] = current_value
+
+    except Exception as e:
+        print(f"❌ 發生錯誤: {e}")
+
+
+def send_discord_notification(content):
+    message = {"content": content}
+
+    try:
+        response = requests.post(DISCORD_WEBHOOK_URL, json=message)
+        response.raise_for_status()
+        print("✅ Discord 通知已發送")
+    except requests.exceptions.RequestException as e:
+        print(f"❌ 發送 Discord 通知時發生錯誤: {e}")
+
+
+def main():
+    print("🎉 主程式啟動")
+
+    while True:
+        print("🔎 開始檢查")
+        for player_uid in PLAYER_UIDS:
+            check_api(player_uid)
+
+        time.sleep(CHECK_INTERVAL)
+
+
+if __name__ == "__main__":
+    main()
