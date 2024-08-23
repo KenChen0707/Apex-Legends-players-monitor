@@ -36,9 +36,12 @@ def check_api(player_uid):
                     player_name = data["global"]["name"]
 
                     if field_to_monitor == "isOnline":
-                        content = f"{"🥳" if current_value else "😴"} {player_name} 已{"上線" if current_value else "離線"}"
+                        emoji = ":partying_face:" if current_value else ":sleeping:"
+                        status = "上線" if current_value else "離線"
+                        content = f"{emoji} {player_name} 已{status}"
+
                     if field_to_monitor == "isInGame" and current_value:
-                        content = f"🎮 {player_name} 遊戲中"
+                        content = f":video_game: {player_name} 遊戲中"
 
                     if content:
                         send_discord_notification(content)
