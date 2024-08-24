@@ -26,6 +26,11 @@ def hello():
     return "哈囉 你們好 這裡是台灣 我是 台灣人阿扣 謝和弦"
 
 
+@app.route("/healthz")
+def healthz():
+    return "I'm healthy❤️‍🩹", 200
+
+
 @scheduler.task("cron", id="do_job", second=f"*/{CHECK_INTERVAL}")
 def job():
     scheduled_task()
