@@ -70,7 +70,10 @@ def check_api(player_uid):
                         content = f"{emoji} {player_name} 已{status}"
 
                     if field_to_monitor == "isInGame" and current_value:
-                        content = f":video_game: {player_name} 遊戲中"
+                        selected_legend = data["realtime"]["selectedLegend"]
+                        current_state_as_text = data["realtime"]["currentStateAsText"]
+
+                        content = f":video_game: {player_name} playing {selected_legend} - {current_state_as_text}"
 
                     if content:
                         send_discord_notification(content)
