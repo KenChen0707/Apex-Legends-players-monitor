@@ -1,3 +1,4 @@
+import logging
 import os
 
 import requests
@@ -35,8 +36,17 @@ def job():
     scheduled_task()
 
 
+# 設定日誌
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger(__name__)
+
+
 def scheduled_task():
-    print("🔎 開始稽查")
+    logger.info("🔎 開始稽查")
     for player_uid in PLAYER_UIDS:
         check_api(player_uid)
 
@@ -81,7 +91,7 @@ def check_api(player_uid):
                 last_values[player_uid][field_to_monitor] = current_value
 
     except Exception as e:
-        print(f"❌ 發生錯誤: {e}")
+        logger.error(f"❌ 發生錯誤: {e}")
 
 
 def send_discord_notification(content):
@@ -90,9 +100,9 @@ def send_discord_notification(content):
     try:
         response = requests.post(DISCORD_WEBHOOK_URL, json=message)
         response.raise_for_status()
-        print("✅ Discord 通知已發送")
+        logger.info("✅ Discord 通知已發送")
     except requests.exceptions.RequestException as e:
-        print(f"❌ 發送 Discord 通知時發生錯誤: {e}")
+        logger.error(f"❌ 發送 Discord 通知時發生錯誤: {e}")
 
 
 if __name__ == "__main__":
