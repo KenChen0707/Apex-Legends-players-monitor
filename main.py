@@ -14,6 +14,18 @@ CHECK_INTERVAL = int(os.getenv("CHECK_INTERVAL"))
 PLAYER_UIDS = os.getenv("PLAYER_UID").split(",")
 FIELDS_TO_MONITOR = ["isOnline", "isInGame"]
 
+last_values = {
+    player_uid: {field_to_monitor: None for field_to_monitor in FIELDS_TO_MONITOR}
+    for player_uid in PLAYER_UIDS
+}
+
+# 設定日誌
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 scheduler = APScheduler()
@@ -36,25 +48,10 @@ def job():
     scheduled_task()
 
 
-# 設定日誌
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-logger = logging.getLogger(__name__)
-
-
 def scheduled_task():
     logger.info("🔎 開始稽查")
     for player_uid in PLAYER_UIDS:
         check_api(player_uid)
-
-
-last_values = {
-    player_uid: {field_to_monitor: None for field_to_monitor in FIELDS_TO_MONITOR}
-    for player_uid in PLAYER_UIDS
-}
 
 
 def check_api(player_uid):
