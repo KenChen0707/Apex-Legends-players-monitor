@@ -70,18 +70,19 @@ def check_api(player_uid):
                 if last_value is not None:  # 避免第一次運行時觸發
                     content = None
                     player_name = data["global"]["name"]
-                    player_info = f"UID:{player_uid} {player_name}"
+                    player_info = f"`UID:{player_uid}` **{player_name}**"
 
                     if field_to_monitor == "isOnline":
                         emoji = ":partying_face:" if current_value else ":sleeping:"
                         status = "上線" if current_value else "離線"
+
                         content = f"{emoji} {player_info} 已{status}"
 
                     if field_to_monitor == "isInGame" and current_value:
                         selected_legend = data["realtime"]["selectedLegend"]
                         current_state_as_text = data["realtime"]["currentStateAsText"]
 
-                        content = f":video_game: {player_info} playing {selected_legend} - {current_state_as_text}"
+                        content = f":video_game: {player_info} playing *{selected_legend}* - {current_state_as_text}"
 
                     if content:
                         send_discord_notification(content)
