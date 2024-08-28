@@ -3,6 +3,8 @@ import time
 
 import requests
 from dotenv import load_dotenv
+from flask import Flask
+from flask_apscheduler import APScheduler
 
 load_dotenv()
 
@@ -11,6 +13,34 @@ DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 CHECK_INTERVAL = int(os.getenv("CHECK_INTERVAL"))
 PLAYER_UIDS = os.getenv("PLAYER_UID").split(",")
 FIELDS_TO_MONITOR = ["isOnline", "isInGame"]
+
+
+app = Flask(__name__)
+scheduler = APScheduler()
+scheduler.init_app(app)
+scheduler.start()
+
+
+@app.route("/")
+def hello():
+    return "哈囉 你們好 這裡是台灣 我是 台灣人阿扣 謝和弦"
+
+
+@app.route("/healthz")
+def healthz():
+    return "I'm healthy❤️‍🩹", 200
+
+
+@scheduler.task("cron", id="do_job", second=f"*/{CHECK_INTERVAL}")
+def job():
+    scheduled_task()
+
+
+def scheduled_task():
+    print("🔎 開始稽查")
+    for player_uid in PLAYER_UIDS:
+        check_api(player_uid)
+
 
 last_values = {
     player_uid: {field_to_monitor: None for field_to_monitor in FIELDS_TO_MONITOR}
@@ -36,9 +66,12 @@ def check_api(player_uid):
                     player_name = data["global"]["name"]
 
                     if field_to_monitor == "isOnline":
-                        content = f"{"🥳" if current_value else "😴"} {player_name} 已{"上線" if current_value else "離線"}"
+                        emoji = ":partying_face:" if current_value else ":sleeping:"
+                        status = "上線" if current_value else "離線"
+                        content = f"{emoji} {player_name} 已{status}"
+
                     if field_to_monitor == "isInGame" and current_value:
-                        content = f"🎮 {player_name} 遊戲中"
+                        content = f":video_game: {player_name} 遊戲中"
 
                     if content:
                         send_discord_notification(content)
@@ -60,16 +93,5 @@ def send_discord_notification(content):
         print(f"❌ 發送 Discord 通知時發生錯誤: {e}")
 
 
-def main():
-    print("🎉 主程式啟動")
-
-    while True:
-        print("🔎 開始檢查")
-        for player_uid in PLAYER_UIDS:
-            check_api(player_uid)
-
-        time.sleep(CHECK_INTERVAL)
-
-
 if __name__ == "__main__":
-    main()
+    app.run(host="0.0.0.0", port=10000)
