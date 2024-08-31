@@ -1,4 +1,2 @@
 request2
 python-dotenv
-flask
-flask-apscheduler
