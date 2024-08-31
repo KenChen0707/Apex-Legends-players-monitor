@@ -3,8 +3,6 @@ import os
 
 import requests
 from dotenv import load_dotenv
-from flask import Flask
-from flask_apscheduler import APScheduler
 
 # 載入環境變數
 load_dotenv()
@@ -22,6 +20,7 @@ last_values = {
     for player_uid in PLAYER_UIDS
 }
 
+
 # 設定日誌
 logging.basicConfig(
     level=logging.INFO,
@@ -29,37 +28,6 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger(__name__)
-
-# 初始化 Flask 應用程式和排程器
-app = Flask(__name__)
-scheduler = APScheduler()
-scheduler.init_app(app)
-scheduler.start()
-
-
-# 定義根路由
-@app.route("/")
-def hello():
-    return "哈囉 你們好 這裡是台灣 我是 台灣人阿扣 謝和弦"
-
-
-# 定義健康檢查路由
-@app.route("/healthz")
-def healthz():
-    return "I'm healthy❤️‍🩹", 200
-
-
-# 設定定期執行的任務
-@scheduler.task("cron", id="do_job", second=f"*/{CHECK_INTERVAL}")
-def job():
-    scheduled_task()
-
-
-# 定期執行的任務
-def scheduled_task():
-    logger.info("🔎 開始稽查")
-    for player_uid in PLAYER_UIDS:
-        check_api(player_uid)
 
 
 # 檢查 API 並處理玩家狀態變化
@@ -124,4 +92,6 @@ def send_discord_notification(content):
 
 # 主程式進入點
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    logger.info("🔎 開始稽查")
+    for player_uid in PLAYER_UIDS:
+        check_api(player_uid)
