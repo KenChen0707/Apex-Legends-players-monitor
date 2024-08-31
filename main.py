@@ -110,7 +110,7 @@ if __name__ == "__main__":
     # 設定排程任務
     scheduler.add_job(
         check_all_players,
-        trigger=CronTrigger(seconds="*/{CHECK_INTERVAL}"),
+        trigger=CronTrigger(second=f"*/{CHECK_INTERVAL}"),
         id="check_players_job",
         name="檢查玩家狀態",
         replace_existing=True,
