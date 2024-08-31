@@ -2,6 +2,8 @@ import logging
 import os
 
 import requests
+from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.triggers.cron import CronTrigger
 from dotenv import load_dotenv
 
 # 載入環境變數
@@ -90,8 +92,33 @@ def send_discord_notification(content):
         logger.error(f"❌ 發送 Discord 通知時發生錯誤: {e}")
 
 
-# 主程式進入點
-if __name__ == "__main__":
-    logger.info("🔎 開始稽查")
+# 新增一個函數來執行所有玩家的檢查
+def check_all_players():
+    logger.info("🔎 開始稽查所有玩家")
     for player_uid in PLAYER_UIDS:
         check_api(player_uid)
+    logger.info("✅ 完成本次稽查")
+
+
+# 主程式進入點
+if __name__ == "__main__":
+    logger.info("🚀 程式啟動")
+
+    # 創建一個 BlockingScheduler
+    scheduler = BlockingScheduler()
+
+    # 設定排程任務
+    scheduler.add_job(
+        check_all_players,
+        trigger=CronTrigger(seconds="*/{CHECK_INTERVAL}"),
+        id="check_players_job",
+        name="檢查玩家狀態",
+        replace_existing=True,
+    )
+
+    try:
+        logger.info("⏰ 排程器已啟動")
+        scheduler.start()
+    except KeyboardInterrupt:
+        logger.info("👋 程式已停止")
+        scheduler.shutdown()
