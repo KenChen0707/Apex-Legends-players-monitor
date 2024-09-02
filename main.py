@@ -6,6 +6,8 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
 from dotenv import load_dotenv
 
+from taipei_tz_formatter import TaipeiTZFormatter
+
 # 載入環境變數
 load_dotenv()
 
@@ -24,11 +26,13 @@ last_values = {
 
 
 # 設定日誌
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
+formatter = TaipeiTZFormatter(
+    fmt="%(asctime)s - %(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
+handler = logging.StreamHandler()
+handler.setFormatter(formatter)
+logging.basicConfig(level=logging.INFO, handlers=[handler])
 logger = logging.getLogger(__name__)
 
 
