@@ -8,6 +8,17 @@ from dotenv import load_dotenv
 
 from taipei_tz_formatter import TaipeiTZFormatter
 
+# 設定日誌
+formatter = TaipeiTZFormatter(
+    fmt="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+handler = logging.StreamHandler()
+handler.setFormatter(formatter)
+logging.basicConfig(level=logging.INFO, handlers=[handler])
+logger = logging.getLogger(__name__)
+
+
 # 載入環境變數
 load_dotenv()
 
@@ -23,17 +34,6 @@ last_values = {
     player_uid: {field_to_monitor: None for field_to_monitor in FIELDS_TO_MONITOR}
     for player_uid in PLAYER_UIDS
 }
-
-
-# 設定日誌
-formatter = TaipeiTZFormatter(
-    fmt="%(asctime)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-handler = logging.StreamHandler()
-handler.setFormatter(formatter)
-logging.basicConfig(level=logging.INFO, handlers=[handler])
-logger = logging.getLogger(__name__)
 
 
 # 檢查 API 並處理玩家狀態變化
