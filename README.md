@@ -1,4 +1,4 @@
-# Apex Legends Player Monitor
+# Apex-Legends-players-monitor
 
 ## Apex API Portal
 

@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "apex-Legends-player-monitor"
+name = "apex-legends-players-monitor"
 version = "0.1.0"
 description = ""
 authors = ["ProMaker <rocker896@gmail.com>"]
