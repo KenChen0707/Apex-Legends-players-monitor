@@ -2,9 +2,22 @@ import logging
 import os
 
 import requests
+from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.triggers.cron import CronTrigger
 from dotenv import load_dotenv
-from flask import Flask
-from flask_apscheduler import APScheduler
+
+from taipei_tz_formatter import TaipeiTZFormatter
+
+# 設定日誌
+formatter = TaipeiTZFormatter(
+    fmt="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+handler = logging.StreamHandler()
+handler.setFormatter(formatter)
+logging.basicConfig(level=logging.INFO, handlers=[handler])
+logger = logging.getLogger(__name__)
+
 
 # 載入環境變數
 load_dotenv()
@@ -21,45 +34,6 @@ last_values = {
     player_uid: {field_to_monitor: None for field_to_monitor in FIELDS_TO_MONITOR}
     for player_uid in PLAYER_UIDS
 }
-
-# 設定日誌
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-logger = logging.getLogger(__name__)
-
-# 初始化 Flask 應用程式和排程器
-app = Flask(__name__)
-scheduler = APScheduler()
-scheduler.init_app(app)
-scheduler.start()
-
-
-# 定義根路由
-@app.route("/")
-def hello():
-    return "哈囉 你們好 這裡是台灣 我是 台灣人阿扣 謝和弦"
-
-
-# 定義健康檢查路由
-@app.route("/healthz")
-def healthz():
-    return "I'm healthy❤️‍🩹", 200
-
-
-# 設定定期執行的任務
-@scheduler.task("cron", id="do_job", second=f"*/{CHECK_INTERVAL}")
-def job():
-    scheduled_task()
-
-
-# 定期執行的任務
-def scheduled_task():
-    logger.info("🔎 開始稽查")
-    for player_uid in PLAYER_UIDS:
-        check_api(player_uid)
 
 
 # 檢查 API 並處理玩家狀態變化
@@ -122,6 +96,33 @@ def send_discord_notification(content):
         logger.error(f"❌ 發送 Discord 通知時發生錯誤: {e}")
 
 
+# 新增一個函數來執行所有玩家的檢查
+def check_all_players():
+    logger.info("🔎 開始稽查所有玩家")
+    for player_uid in PLAYER_UIDS:
+        check_api(player_uid)
+    logger.info("✅ 完成本次稽查")
+
+
 # 主程式進入點
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    logger.info("🚀 程式啟動")
+
+    # 創建一個 BlockingScheduler
+    scheduler = BlockingScheduler()
+
+    # 設定排程任務
+    scheduler.add_job(
+        check_all_players,
+        trigger=CronTrigger(second=f"*/{CHECK_INTERVAL}"),
+        id="check_players_job",
+        name="檢查玩家狀態",
+        replace_existing=True,
+    )
+
+    try:
+        logger.info("⏰ 排程器已啟動")
+        scheduler.start()
+    except KeyboardInterrupt:
+        logger.info("👋 程式已停止")
+        scheduler.shutdown()

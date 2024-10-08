@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "123"
+name = "apex-Legends-player-monitor"
 version = "0.1.0"
 description = ""
 authors = ["ProMaker <rocker896@gmail.com>"]
@@ -9,8 +9,7 @@ readme = "README.md"
 python = "^3.12"
 request2 = "^0.2"
 python-dotenv = "^1.0.1"
-flask = "^3.0.3"
-flask-apscheduler = "^1.13.1"
+apscheduler = "^3.10.4"
 
 
 [build-system]
