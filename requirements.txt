@@ -1,3 +1,3 @@
-request2
 python-dotenv
 apscheduler
+requests
