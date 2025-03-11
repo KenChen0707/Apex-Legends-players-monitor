@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 
 import requests
 from apscheduler.schedulers.blocking import BlockingScheduler
@@ -86,14 +87,29 @@ def check_api(player_uid):
 # 發送 Discord 通知
 def send_discord_notification(content):
     message = {"content": content}
+    max_retries = 3
+    base_delay = 2  # 基礎延遲秒數
 
-    try:
-        # 發送 POST 請求到 Discord Webhook
-        response = requests.post(DISCORD_WEBHOOK_URL, json=message)
-        response.raise_for_status()
-        logger.info("✅ Discord 通知已發送")
-    except requests.exceptions.RequestException as e:
-        logger.error(f"❌ 發送 Discord 通知時發生錯誤: {e}")
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(DISCORD_WEBHOOK_URL, json=message)
+            response.raise_for_status()
+            logger.info("✅ Discord 通知已發送")
+            return
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 429:
+                retry_after = int(e.response.headers.get("Retry-After", base_delay))
+                logger.warning(f"⚠️ 達到速率限制，等待 {retry_after} 秒後重試")
+                time.sleep(retry_after)
+                continue
+            else:
+                logger.error(f"❌ HTTP 錯誤: {e}")
+                break
+        except requests.exceptions.RequestException as e:
+            logger.error(f"❌ 發送 Discord 通知時發生錯誤: {e}")
+            break
+
+    logger.error("❌ 已達最大重試次數，放棄發送通知")
 
 
 # 新增一個函數來執行所有玩家的檢查
